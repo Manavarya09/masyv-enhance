@@ -1,5 +1,5 @@
 {
-  "name": "masyv",
+  "name": "@masyv/enhance",
   "version": "0.1.0",
   "description": "MASYV Enhance Engine — AI-powered image enhancement CLI",
   "license": "MIT",
