@@ -1,12 +1,15 @@
 # MASYV Enhance Engine
 
-AI-powered image enhancement, upscaling, and vectorization for developers.
+Canva-level image enhancement for developers — via CLI, API, and Claude plugin.
+
+[![npm](https://img.shields.io/npm/v/@masyv/enhance)](https://www.npmjs.com/package/@masyv/enhance)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## Features
 
-- **Smart Pipeline** — auto-detects image type (photo/logo/text/illustration) and routes to the optimal processing pipeline
+- **Smart Pipeline** — auto-detects image type (photo, logo, text, illustration) and routes to the optimal processing pipeline
 - **AI Upscaling** — Real-ESRGAN super-resolution via ONNX Runtime (2x, 4x, 8x)
-- **SVG Vectorization** — raster-to-vector conversion using VTracer
+- **SVG Vectorization** — raster-to-vector conversion for logos and icons
 - **Multi-format Export** — PNG, JPEG, WebP, SVG
 - **CLI via NPX** — developer-friendly command line interface
 - **Claude Plugin** — callable as an MCP tool from Claude
@@ -25,16 +28,29 @@ Input Image → Analyze Type → Route Pipeline → Process → Export
       Sharpen  Optimize
 ```
 
+| Detected Type | Pipeline |
+|--------------|----------|
+| Photo | Denoise → AI Upscale (Real-ESRGAN) → Sharpen |
+| Logo | Threshold + Cleanup → Vectorize (SVG) or Upscale |
+| Text | Contrast Boost → Edge Sharpen |
+| Illustration | Gentle Denoise → AI Upscale |
+
 ## Quick Start
 
-### Prerequisites
-
-- Rust 1.80+ (`rustup install stable`)
-- Node.js 18+ (`node --version`)
-
-### Build
+### Install from npm
 
 ```bash
+npm install -g @masyv/enhance
+```
+
+### Or build from source
+
+**Prerequisites:** Rust 1.80+, Node.js 18+
+
+```bash
+git clone https://github.com/Manavarya09/masyv-enhance.git
+cd masyv-enhance
+
 # Build everything
 ./scripts/build.sh
 
@@ -42,20 +58,30 @@ Input Image → Analyze Type → Route Pipeline → Process → Export
 ./scripts/download-models.sh
 ```
 
-### Usage
+## Usage
 
-**Rust binary (direct):**
+```bash
+# Smart enhance — auto-detects image type
+masyv enhance photo.jpg --smart
+
+# AI upscale 4x
+masyv enhance photo.jpg --mode upscale --scale 4
+
+# Vectorize a logo to SVG
+masyv enhance logo.png --mode vectorize --format svg
+
+# Batch process a folder
+masyv enhance ./images/ --batch --format webp
+
+# High-quality JPEG export
+masyv enhance photo.png --format jpeg --quality 95
+```
+
+### Rust binary (direct)
 
 ```bash
 cd core
 cargo run --release -- input.png --mode smart --scale 4 --format png
-```
-
-**Node CLI:**
-
-```bash
-cd cli
-npx masyv enhance input.png --smart --scale 4 --format png
 ```
 
 ### CLI Options
@@ -64,7 +90,7 @@ npx masyv enhance input.png --smart --scale 4 --format png
 masyv enhance <input> [options]
 
 Options:
-  --smart              Auto-detect image type and route (default)
+  --smart              Auto-detect image type and route to best pipeline
   --mode <mode>        Processing mode: smart, upscale, vectorize, enhance
   --scale <n>          Upscale factor: 2, 4, 8 (default: 4)
   --format <fmt>       Output format: png, jpeg, webp, svg (default: png)
@@ -75,30 +101,19 @@ Options:
   --verbose            Enable debug logging
 ```
 
-### Examples
+## AI Models
+
+For AI-powered upscaling, download the Real-ESRGAN model (~67MB):
 
 ```bash
-# Smart enhance (auto-detect type)
-npx masyv enhance photo.jpg --smart
-
-# Upscale 4x with AI
-npx masyv enhance photo.jpg --mode upscale --scale 4
-
-# Vectorize a logo
-npx masyv enhance logo.png --mode vectorize --format svg
-
-# Batch process a folder
-npx masyv enhance ./images/ --batch --format webp
-
-# High-quality JPEG export
-npx masyv enhance photo.png --format jpeg --quality 95
+./scripts/download-models.sh
 ```
+
+Without the model, the engine gracefully falls back to high-quality Lanczos3 interpolation.
 
 ## Claude Plugin
 
-The engine exposes an `enhance_image` tool for Claude integration. See `plugin/tool.json` for the schema.
-
-**Tool call example:**
+The engine exposes an `enhance_image` tool for Claude integration. See [`plugin/tool.json`](plugin/tool.json) for the full schema.
 
 ```json
 {
@@ -109,27 +124,35 @@ The engine exposes an `enhance_image` tool for Claude integration. See `plugin/t
 }
 ```
 
+Claude can call this tool, receive the processed output path, and describe the result.
+
 ## Project Structure
 
 ```
 masyv-enhance/
 ├── core/                    Rust engine
 │   ├── src/
-│   │   ├── main.rs          CLI entrypoint
+│   │   ├── main.rs          CLI entrypoint (clap)
 │   │   ├── lib.rs           Engine orchestrator
-│   │   ├── pipeline/        Processing modules
+│   │   ├── pipeline/
 │   │   │   ├── analyze.rs   Image type detection
-│   │   │   ├── enhance.rs   Traditional processing
-│   │   │   ├── upscale.rs   AI super-resolution
-│   │   │   ├── vectorize.rs SVG conversion
-│   │   │   └── export.rs    Format output
+│   │   │   ├── enhance.rs   Denoise, contrast, sharpen
+│   │   │   ├── upscale.rs   AI super-resolution (ONNX)
+│   │   │   ├── vectorize.rs Raster → SVG (VTracer)
+│   │   │   └── export.rs    Multi-format output
 │   │   ├── models/
-│   │   │   └── onnx.rs      ONNX model loader
-│   │   └── utils/           Helpers
-│   └── models/              ONNX files (downloaded)
+│   │   │   └── onnx.rs      ONNX model loader + tiled inference
+│   │   └── utils/           Image & filesystem helpers
+│   └── models/              ONNX model files (downloaded)
 ├── cli/                     Node.js NPX wrapper
+│   ├── bin/masyv.js         CLI entrypoint
+│   └── src/                 Runner + logger
 ├── plugin/                  Claude MCP tool definition
-└── scripts/                 Build and setup scripts
+│   └── tool.json
+├── scripts/
+│   ├── build.sh             Build Rust + link to CLI
+│   └── download-models.sh   Fetch ONNX models
+└── tests/samples/           Test images
 ```
 
 ## Tech Stack
