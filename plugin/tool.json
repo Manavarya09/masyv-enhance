@@ -1,0 +1,72 @@
+{
+  "name": "enhance_image",
+  "description": "Enhance, upscale, or vectorize an image using the MASYV Enhance Engine. Supports AI super-resolution (Real-ESRGAN), smart auto-detection of image type (photo/logo/text/illustration), and SVG vectorization. Returns the path to the enhanced output file.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "image_path": {
+        "type": "string",
+        "description": "Absolute path to the input image file"
+      },
+      "mode": {
+        "type": "string",
+        "enum": ["smart", "upscale", "vectorize", "enhance"],
+        "default": "smart",
+        "description": "Processing mode. 'smart' auto-detects image type and routes to the best pipeline. 'upscale' uses AI super-resolution. 'vectorize' converts to SVG. 'enhance' applies traditional image processing."
+      },
+      "scale": {
+        "type": "integer",
+        "enum": [2, 4, 8],
+        "default": 4,
+        "description": "Upscale factor (only used in upscale and smart modes)"
+      },
+      "format": {
+        "type": "string",
+        "enum": ["png", "jpeg", "webp", "svg"],
+        "default": "png",
+        "description": "Output format"
+      },
+      "output_path": {
+        "type": "string",
+        "description": "Optional output path. Auto-generated if omitted (input_enhanced.ext)."
+      }
+    },
+    "required": ["image_path"]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "output_path": {
+        "type": "string",
+        "description": "Path to the enhanced output file"
+      },
+      "detected_type": {
+        "type": "string",
+        "enum": ["photo", "logo", "text", "illustration"],
+        "description": "Detected image type (only in smart mode)"
+      },
+      "mode_used": {
+        "type": "string",
+        "description": "The processing mode that was applied"
+      },
+      "input_dimensions": {
+        "type": "array",
+        "items": { "type": "integer" },
+        "description": "[width, height] of input image"
+      },
+      "output_dimensions": {
+        "type": "array",
+        "items": { "type": "integer" },
+        "description": "[width, height] of output image"
+      },
+      "processing_time_ms": {
+        "type": "integer",
+        "description": "Processing time in milliseconds"
+      },
+      "format": {
+        "type": "string",
+        "description": "Output format used"
+      }
+    }
+  }
+}

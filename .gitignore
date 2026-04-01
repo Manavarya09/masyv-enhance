@@ -1,0 +1,16 @@
+# Rust
+core/target/
+core/models/*.onnx
+
+# Node
+cli/node_modules/
+cli/bin/masyv-core
+
+# OS
+.DS_Store
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/

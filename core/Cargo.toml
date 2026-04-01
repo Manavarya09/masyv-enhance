@@ -1,0 +1,49 @@
+[package]
+name = "masyv-core"
+version = "0.1.0"
+edition = "2021"
+description = "MASYV Enhance Engine — AI-powered image enhancement, upscaling, and vectorization"
+license = "MIT"
+
+[[bin]]
+name = "masyv-core"
+path = "src/main.rs"
+
+[lib]
+name = "masyv_core"
+path = "src/lib.rs"
+
+[dependencies]
+# Image processing
+image = "0.25"
+imageproc = "0.26"
+
+# AI / ONNX
+ort = { version = "2.0.0-rc.12", features = ["load-dynamic", "ndarray"] }
+ndarray = "0.17"
+
+# Vectorization
+vtracer = "0.6"
+
+# Parallelism
+rayon = "1.8"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Error handling
+anyhow = "1"
+thiserror = "2"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+strip = true
