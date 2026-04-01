@@ -1,6 +1,6 @@
 {
   "name": "@masyv/enhance",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MASYV Enhance Engine — AI-powered image enhancement CLI",
   "license": "MIT",
   "type": "module",
@@ -20,6 +20,7 @@
   },
   "files": [
     "bin/",
-    "src/"
+    "src/",
+    "README.md"
   ]
 }
