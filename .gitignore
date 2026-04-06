@@ -6,6 +6,9 @@ core/models/*.onnx
 cli/node_modules/
 cli/bin/masyv-core
 
+# Test output (enhanced files generated during testing)
+tests/samples/*_enhanced.*
+
 # OS
 .DS_Store
 *.swp
