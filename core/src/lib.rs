@@ -124,6 +124,14 @@ impl Engine {
 
     /// Run the full enhancement pipeline.
     pub fn process(&self, request: &EnhanceRequest) -> anyhow::Result<EnhanceResult> {
+        // Validate jpeg_quality is within the supported range (1-100)
+        if request.jpeg_quality == 0 || request.jpeg_quality > 100 {
+            anyhow::bail!(
+                "jpeg_quality must be between 1 and 100, got {}",
+                request.jpeg_quality
+            );
+        }
+
         let start = std::time::Instant::now();
         tracing::info!(input = %request.input_path.display(), mode = %request.mode, "starting enhancement");
 
@@ -167,7 +175,12 @@ impl Engine {
 
         // Determine output path
         let output_path = request.output_path.clone().unwrap_or_else(|| {
-            let stem = request.input_path.file_stem().unwrap().to_string_lossy();
+            let stem = request
+                .input_path
+                .file_stem()
+                .unwrap_or_default()
+                .to_string_lossy();
+            let stem = if stem.is_empty() { "output" } else { &stem };
             let ext = request.format.extension();
             request.input_path.with_file_name(format!("{stem}_enhanced.{ext}"))
         });

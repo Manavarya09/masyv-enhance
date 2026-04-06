@@ -26,7 +26,7 @@ pub fn upscale(img: &DynamicImage, scale: u32, model_dir: &Path) -> Result<Dynam
 
     // Fallback to traditional upscaling
     tracing::warn!("ONNX model not found at {}, using Lanczos3 fallback", model_path.display());
-    Ok(lanczos_upscale(img, scale))
+    lanczos_upscale(img, scale)
 }
 
 /// AI-powered upscale using Real-ESRGAN ONNX model.
@@ -57,14 +57,33 @@ fn ai_upscale(img: &DynamicImage, scale: u32, model_path: &Path) -> Result<Dynam
     }
 }
 
+/// Maximum number of pixels allowed in a single output image (256 megapixels).
+/// This prevents accidental multi-gigabyte memory allocations.
+const MAX_OUTPUT_PIXELS: u64 = 256_000_000;
+
 /// High-quality Lanczos3 interpolation fallback.
-fn lanczos_upscale(img: &DynamicImage, scale: u32) -> DynamicImage {
-    let (w, h) = (img.width() * scale, img.height() * scale);
+fn lanczos_upscale(img: &DynamicImage, scale: u32) -> Result<DynamicImage> {
+    let w = img.width() as u64 * scale as u64;
+    let h = img.height() as u64 * scale as u64;
+    let total_pixels = w * h;
+
+    if total_pixels > MAX_OUTPUT_PIXELS {
+        anyhow::bail!(
+            "output dimensions {}x{} ({:.0} MP) exceed the maximum of {} MP; \
+             use a smaller scale factor or input image",
+            w,
+            h,
+            total_pixels as f64 / 1_000_000.0,
+            MAX_OUTPUT_PIXELS / 1_000_000,
+        );
+    }
+
+    let (w, h) = (w as u32, h as u32);
     tracing::info!(target_w = w, target_h = h, "Lanczos3 upscale");
-    DynamicImage::ImageRgba8(image::imageops::resize(
+    Ok(DynamicImage::ImageRgba8(image::imageops::resize(
         img,
         w,
         h,
         image::imageops::FilterType::Lanczos3,
-    ))
+    )))
 }
