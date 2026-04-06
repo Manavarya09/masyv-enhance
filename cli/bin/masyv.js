@@ -1,18 +1,24 @@
 #!/usr/bin/env node
 
 import { createRequire } from 'module';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import { runCore } from '../src/runner.js';
 import { formatResult, formatError } from '../src/logger.js';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
+
 const program = new Command();
 
 program
   .name('masyv')
   .description('MASYV Enhance Engine — AI-powered image enhancement')
-  .version('0.1.0');
+  .version(pkg.version);
 
 program
   .command('enhance')
@@ -84,7 +90,7 @@ program
   .action(() => {
     console.log(chalk.bold('\nMASYV Enhance Engine'));
     console.log(chalk.dim('─'.repeat(40)));
-    console.log(`  Version:  ${chalk.green('0.1.0')}`);
+    console.log(`  Version:  ${chalk.green(pkg.version)}`);
     console.log(`  Runtime:  ${chalk.cyan('Rust + ONNX')}`);
     console.log(`  Models:   Real-ESRGAN x4plus`);
     console.log(`  Formats:  PNG, JPEG, WebP, SVG`);
