@@ -44,7 +44,18 @@ fn export_raster(
     format: OutputFormat,
     jpeg_quality: u8,
 ) -> Result<(u32, u32)> {
+    // Ensure the parent directory exists before writing
+    if let Some(parent) = path.parent() {
+        if !parent.as_os_str().is_empty() && !parent.exists() {
+            std::fs::create_dir_all(parent)
+                .with_context(|| format!("failed to create output directory: {}", parent.display()))?;
+        }
+    }
+
     let dims = (img.width(), img.height());
+
+    // Clamp jpeg_quality to valid range as a safety net
+    let jpeg_quality = jpeg_quality.clamp(1, 100);
 
     match format {
         OutputFormat::Png => {
