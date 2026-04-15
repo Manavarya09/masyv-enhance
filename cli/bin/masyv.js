@@ -32,6 +32,7 @@ program
   .option('--batch', 'Process all images in directory', false)
   .option('--model-dir <path>', 'Directory containing ONNX models')
   .option('--mode <mode>', 'Processing mode (smart, upscale, vectorize, enhance)', 'smart')
+  .option('--analyze', 'Analyze image only (detect type and stats, skip processing)', false)
   .option('--verbose', 'Verbose output', false)
   .action(async (input, options) => {
     const spinner = ora({
@@ -50,6 +51,7 @@ program
       args.push('--quality', options.quality);
       args.push('--json');
 
+      if (options.analyze) args.push('--analyze');
       if (options.output) args.push('--output', options.output);
       if (options.batch) args.push('--batch');
       if (options.modelDir) args.push('--model-dir', options.modelDir);

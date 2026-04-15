@@ -46,6 +46,10 @@ struct Cli {
     #[arg(long)]
     json: bool,
 
+    /// Analyze image only (detect type, stats) without running the pipeline
+    #[arg(long)]
+    analyze: bool,
+
     /// Verbose logging
     #[arg(long, short)]
     verbose: bool,
@@ -108,6 +112,25 @@ fn main() -> Result<()> {
     // Single file processing
     if !cli.input.exists() {
         bail!("input file not found: {}", cli.input.display());
+    }
+
+    // Analyze-only mode: detect type and stats, then exit
+    if cli.analyze {
+        let img = masyv_core::utils::image::load_image(&cli.input)?;
+        let result = masyv_core::pipeline::analyze::analyze_image(&img);
+        if cli.json {
+            println!("{}", serde_json::to_string_pretty(&result)?);
+        } else {
+            println!("Analysis: {}", cli.input.display());
+            println!("  Detected type:       {}", result.detected_type);
+            println!("  Dimensions:          {}x{}", result.dimensions.0, result.dimensions.1);
+            println!("  Unique colors:       {}", result.unique_colors);
+            println!("  Edge density:        {:.4}", result.edge_density);
+            println!("  Avg saturation:      {:.4}", result.avg_saturation);
+            println!("  Saturation variance: {:.6}", result.saturation_variance);
+            println!("  Confidence:          {:.2}", result.confidence);
+        }
+        return Ok(());
     }
 
     let request = EnhanceRequest {

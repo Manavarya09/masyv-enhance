@@ -10,9 +10,9 @@
       },
       "mode": {
         "type": "string",
-        "enum": ["smart", "upscale", "vectorize", "enhance"],
+        "enum": ["smart", "upscale", "vectorize", "enhance", "analyze"],
         "default": "smart",
-        "description": "Processing mode. 'smart' auto-detects image type and routes to the best pipeline. 'upscale' uses AI super-resolution. 'vectorize' converts to SVG. 'enhance' applies traditional image processing."
+        "description": "Processing mode. 'smart' auto-detects image type and routes to the best pipeline. 'upscale' uses AI super-resolution. 'vectorize' converts to SVG. 'enhance' applies traditional image processing. 'analyze' returns detected image type and stats without processing."
       },
       "scale": {
         "type": "integer",
