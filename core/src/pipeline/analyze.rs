@@ -1,7 +1,38 @@
 use image::{DynamicImage, Pixel};
+use serde::Serialize;
 use std::collections::HashSet;
 
 use crate::ImageType;
+
+/// Full analysis result returned by `analyze_image`.
+#[derive(Debug, Clone, Serialize)]
+pub struct AnalysisResult {
+    pub detected_type: ImageType,
+    pub dimensions: (u32, u32),
+    pub unique_colors: usize,
+    pub edge_density: f64,
+    pub saturation_variance: f64,
+    pub avg_saturation: f64,
+    pub confidence: f64,
+}
+
+/// Analyze an image and return detailed stats + detected type without running the pipeline.
+pub fn analyze_image(img: &DynamicImage) -> AnalysisResult {
+    let (width, height) = (img.width(), img.height());
+    let stats = compute_image_stats(img);
+    let detected_type = classify(&stats);
+    let confidence = compute_confidence(&stats, detected_type);
+
+    AnalysisResult {
+        detected_type,
+        dimensions: (width, height),
+        unique_colors: stats.unique_colors,
+        edge_density: stats.edge_density,
+        saturation_variance: stats.saturation_variance,
+        avg_saturation: stats.avg_saturation,
+        confidence,
+    }
+}
 
 /// Analyze an image and detect its content type using heuristics.
 ///
@@ -21,6 +52,10 @@ pub fn detect_image_type(img: &DynamicImage) -> ImageType {
         "image analysis stats"
     );
 
+    classify(&stats)
+}
+
+fn classify(stats: &ImageStats) -> ImageType {
     // Decision tree:
     //
     // Very few unique colors + high edge density → Logo
@@ -36,6 +71,32 @@ pub fn detect_image_type(img: &DynamicImage) -> ImageType {
         ImageType::Photo
     } else {
         ImageType::Illustration
+    }
+}
+
+/// Rough confidence score based on how strongly the stats match the detected type.
+fn compute_confidence(stats: &ImageStats, detected: ImageType) -> f64 {
+    match detected {
+        ImageType::Logo => {
+            // Fewer colors + higher edge density → more confident
+            let color_score = 1.0 - (stats.unique_colors as f64 / 64.0).min(1.0);
+            let edge_score = ((stats.edge_density - 0.05) / 0.15).clamp(0.0, 1.0);
+            0.5 + 0.5 * (color_score * 0.6 + edge_score * 0.4)
+        }
+        ImageType::Text => {
+            let sat_score = 1.0 - (stats.avg_saturation / 0.1).min(1.0);
+            let edge_score = ((stats.edge_density - 0.08) / 0.12).clamp(0.0, 1.0);
+            0.5 + 0.5 * (sat_score * 0.5 + edge_score * 0.5)
+        }
+        ImageType::Photo => {
+            let color_score = ((stats.unique_colors as f64 - 1000.0) / 5000.0).clamp(0.0, 1.0);
+            let var_score = ((stats.saturation_variance - 0.01) / 0.05).clamp(0.0, 1.0);
+            0.5 + 0.5 * (color_score * 0.5 + var_score * 0.5)
+        }
+        ImageType::Illustration => {
+            // Fallback category — lower base confidence
+            0.4
+        }
     }
 }
 
