@@ -1,5 +1,11 @@
 # MASYV Enhance Engine
 
+[![License: MIT](https://img.shields.io/github/license/Manavarya09/masyv-enhance?color=0a0a0a)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/Manavarya09/masyv-enhance?style=flat&color=0a0a0a)](https://github.com/Manavarya09/masyv-enhance/stargazers)
+[![Issues](https://img.shields.io/github/issues/Manavarya09/masyv-enhance?color=0a0a0a)](https://github.com/Manavarya09/masyv-enhance/issues)
+[![Last commit](https://img.shields.io/github/last-commit/Manavarya09/masyv-enhance?color=0a0a0a)](https://github.com/Manavarya09/masyv-enhance/commits/main)
+
+
 Canva-level image enhancement for developers — via CLI, API, and Claude plugin.
 
 [![npm](https://img.shields.io/npm/v/@masyv/enhance)](https://www.npmjs.com/package/@masyv/enhance)
