@@ -49,9 +49,15 @@ fn ai_upscale(img: &DynamicImage, scale: u32, model_path: &Path) -> Result<Dynam
         }
         4 => upscaler.infer(img),
         8 => {
-            // Two-pass 4x upscale
-            let first = upscaler.infer(img)?;
-            upscaler.infer(&first)
+            // Real-ESRGAN is 4x per pass; two passes give 16x, so downscale to 8x.
+            let upscaled_16x = upscaler.infer(&upscaler.infer(img)?)?;
+            let (w, h) = (img.width() * 8, img.height() * 8);
+            Ok(DynamicImage::ImageRgb8(image::imageops::resize(
+                &upscaled_16x.to_rgb8(),
+                w,
+                h,
+                image::imageops::FilterType::Lanczos3,
+            )))
         }
         _ => upscaler.infer(img),
     }
